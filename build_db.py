@@ -95,6 +95,35 @@ def cm_url(name_en, name_de):
     return "https://www.cardmarket.com/de/Pokemon/Products/Search?searchString=" + urllib.parse.quote(q)
 
 
+STANDARD_FELDER = {"type", "subtype", "thirdParty", "size"}
+
+
+def variante_name(v):
+    """z. B. 'Normal', 'Holo-schattenlos', 'Stempel Normal [pokemon-center]', 'Folie Reverse [cosmos]'.
+    Das Sondermerkmal steht vorne, weil cm_preise.py die Variante auf 12 Zeichen kürzt."""
+    name = v.get("type") or "?"
+    if v.get("subtype"):
+        name += "-" + str(v["subtype"])
+    tags, details = [], []
+    if v.get("size") and v["size"] not in ("standard", "Standard"):
+        tags.append("Größe")
+        details.append(str(v["size"]))
+    if v.get("foil"):
+        tags.append("Folie")
+        details.append(str(v["foil"]))
+    if v.get("stamp"):
+        s = v["stamp"]
+        tags.append("Stempel")
+        details.append(", ".join(map(str, s)) if isinstance(s, list) else str(s))
+    for k, w in v.items():  # unbekannte Merkmale nicht verschlucken
+        if k not in STANDARD_FELDER | {"foil", "stamp"} and w not in (None, "", [], False):
+            tags.append("Sonder")
+            details.append(f"{k}: {w}")
+    if not tags:
+        return name
+    return f"{'+'.join(dict.fromkeys(tags))} {name} [{'; '.join(details)}]"
+
+
 def baue_zeilen(karte, set_de, set_en, en_namen, pg):
     sid = set_de.get("id")
     abk = (set_de.get("abbreviation") or {})
@@ -109,15 +138,18 @@ def baue_zeilen(karte, set_de, set_en, en_namen, pg):
         seltenheit=karte.get("rarity"),
         tcgdex_id=karte.get("id"),
     )
-    # Varianten mit eigener Cardmarket-ID (z. B. 1. Edition / Shadowless), falls TCGdex sie liefert
-    varianten = []
+    # Varianten mit eigener Cardmarket-ID. Gleiche ID (typisch: Normal + Reverse) = eine Zeile;
+    # Sonderdrucke (Stempel, Spezialfolie, Größe, Fehldruck …) werden im Namen markiert.
+    gruppen = {}
     for v in karte.get("variants_detailed") or []:
         vid = ((v.get("thirdParty") or {}).get("cardmarket"))
-        if vid:
-            name = v.get("type") or "variante"
-            if v.get("subtype"):
-                name += "-" + v["subtype"]
-            varianten.append((name, int(vid)))
+        if not vid:
+            continue
+        name = variante_name(v)
+        g = gruppen.setdefault(int(vid), [])
+        if name not in g:
+            g.append(name)
+    varianten = [("/".join(n), vid) for vid, n in gruppen.items()]
     haupt = (karte.get("thirdParty") or {}).get("cardmarket")
     if not varianten:
         varianten = [(None, int(haupt) if haupt else None)]
@@ -140,6 +172,7 @@ def baue_zeilen(karte, set_de, set_en, en_namen, pg):
             quelle, stand = None, None
         zeilen.append(dict(basis, cm_variante=variante, cm_id=cid, trend=trend, avg30=avg30,
                            low=low, trend_reverse=trend_rev,
+                           sondervariante=1 if variante and variante.endswith("]") else 0,
                            cm_url=cm_url(basis["name_en"], basis["name_de"]),
                            preis_quelle=quelle, preis_stand=stand))
     return zeilen
@@ -149,7 +182,7 @@ SCHEMA = """
 CREATE TABLE karten (
   name_de TEXT, name_en TEXT, set_id TEXT, set_de TEXT, set_en TEXT, set_kuerzel TEXT,
   nummer TEXT, seltenheit TEXT, tcgdex_id TEXT, cm_variante TEXT, cm_id INTEGER,
-  trend REAL, avg30 REAL, low REAL, trend_reverse REAL, cm_url TEXT,
+  trend REAL, avg30 REAL, low REAL, trend_reverse REAL, sondervariante INTEGER, cm_url TEXT,
   preis_quelle TEXT, preis_stand TEXT
 );
 CREATE INDEX ix_name ON karten(name_de);
@@ -158,7 +191,7 @@ CREATE TABLE meta (schluessel TEXT PRIMARY KEY, wert TEXT);
 """
 SPALTEN = ["name_de", "name_en", "set_id", "set_de", "set_en", "set_kuerzel", "nummer",
            "seltenheit", "tcgdex_id", "cm_variante", "cm_id", "trend", "avg30", "low",
-           "trend_reverse", "cm_url", "preis_quelle", "preis_stand"]
+           "trend_reverse", "sondervariante", "cm_url", "preis_quelle", "preis_stand"]
 
 
 def pruefe(zeilen):

@@ -20,7 +20,10 @@ Manuell starten: Tab **Actions → Preisdatenbank aktualisieren → Run workflow
 ## Tabellen
 
 - `karten`: name_de, name_en, set_id, set_de, set_en, set_kuerzel, nummer, seltenheit,
-  tcgdex_id, cm_variante, cm_id, trend, avg30, low, trend_reverse, cm_url, preis_quelle, preis_stand
+  tcgdex_id, cm_variante, cm_id, trend, avg30, low, trend_reverse, sondervariante, cm_url,
+  preis_quelle, preis_stand
+- `cm_variante`: Standarddruck z. B. `Normal/Reverse`, `Holo-schattenlos`; Sonderdrucke beginnen mit
+  `Stempel`, `Folie`, `Größe` oder `Sonder` (Details in eckigen Klammern) und haben `sondervariante = 1`.
 - `meta`: erstellt, preisguide_stand, karten, karten_mit_preis, pruefung, …
 
 Hinweis: Cardmarket-Preise sind sprachübergreifende Durchschnittswerte, kein deutscher Marktpreis.
