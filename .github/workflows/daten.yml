@@ -42,7 +42,7 @@ jobs:
         run: gh release upload daten-aktuell dist/pokemon_de.sqlite dist/pokemon_de.csv --clobber
 
       - name: Webseite bauen
-        run: python3 build_html.py dist/pokemon_de.sqlite site/index.html --suche suche.json
+        run: python3 build_html.py dist/pokemon_de.sqlite site/index.html
 
       - uses: actions/upload-pages-artifact@v3
         with:

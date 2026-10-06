@@ -32,17 +32,10 @@ Manuell starten: Tab **Actions → Preisdatenbank aktualisieren → Run workflow
   ID (z. B. `Normal/Stempel Normal [1. Auflage]`), steht er vorne und `sondervariante = 0`.
 - `meta`: erstellt, preisguide_stand, karten, karten_mit_preis, pruefung, …
 
-## Letzte Auktionssuche (`suche.json`)
+## Letzte Auktionssuche (nur lokal)
 
-Die Webseite zeigt oben, welche Karten der Datenbank bei der letzten Auktionssuche berücksichtigt
-wurden, und hebt sie in der Tabelle hervor. Format:
-
-```json
-{"datum": "2026-10-06", "beschreibung": "…", "db_genutzt": true, "hinweis": "…",
- "karten": [{"tcgdex_id": "base1-4", "cm_id": 273699, "auktion": "267798660274", "notiz": "Glurak Base Set"}]}
-```
-
-Ohne `cm_id` gelten alle Varianten der Karte als berücksichtigt. Die Datei wird nach einer Suche
-ersetzt; die Seite übernimmt sie beim nächsten Lauf.
+`build_html.py` kann optional mit `--suche suche.json` hervorheben, welche Karten bei einer
+Auktionssuche berücksichtigt wurden. Diese Datei wird **nicht** ins Repository eingecheckt
+(steht in `.gitignore`) und nicht veröffentlicht; die öffentliche Webseite zeigt sie nicht an.
 
 Hinweis: Cardmarket-Preise sind sprachübergreifende Durchschnittswerte, kein deutscher Marktpreis.
