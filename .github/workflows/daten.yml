@@ -1,0 +1,40 @@
+name: Preisdatenbank aktualisieren
+
+on:
+  schedule:
+    - cron: "17 4 * * *"   # täglich ca. 06:17 Uhr MESZ (04:17 UTC)
+  workflow_dispatch:        # manuell über "Run workflow" startbar
+
+permissions:
+  contents: write           # nötig, um das Release-Asset zu ersetzen
+
+concurrency:
+  group: daten
+  cancel-in-progress: false
+
+jobs:
+  bauen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Datenbank bauen
+        run: python3 build_db.py --out dist
+
+      - name: Release "daten-aktuell" anlegen (falls nötig)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view daten-aktuell >/dev/null 2>&1 || \
+            gh release create daten-aktuell --title "Preisdatenbank (aktuell)" \
+              --notes "Wird täglich automatisch ersetzt. Download: pokemon_de.sqlite / pokemon_de.csv" --latest
+
+      - name: Dateien hochladen (ersetzt die alten)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload daten-aktuell dist/pokemon_de.sqlite dist/pokemon_de.csv --clobber
