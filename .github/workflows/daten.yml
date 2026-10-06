@@ -36,6 +36,9 @@ jobs:
             gh release create daten-aktuell --title "Preisdatenbank (aktuell)" \
               --notes "Wird täglich automatisch ersetzt. Download: pokemon_de.sqlite / pokemon_de.csv" --latest
 
+      - name: Release-Tag auf aktuellen Stand setzen
+        run: git push --force origin HEAD:refs/tags/daten-aktuell
+
       - name: Dateien hochladen (ersetzt die alten)
         env:
           GH_TOKEN: ${{ github.token }}
