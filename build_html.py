@@ -128,6 +128,7 @@ footer{margin-top:24px}
   <label>Trend ab <input type="number" id="min" min="0" step="0.5" placeholder="€"></label>
   <label><input type="checkbox" id="std"> nur Standarddruck</label>
   <label><input type="checkbox" id="preis" checked> nur mit Preis</label>
+  <span id="nrTag" class="tag" hidden>Nr. <span id="nrWert"></span> <button id="nrWeg" title="Nummernfilter entfernen" style="padding:0 4px;border:0;background:none;color:inherit">✕</button></span>
   <label id="inLbl" hidden><input type="checkbox" id="nurIn"> nur in Suche berücksichtigt</label>
 </div>
 <div class="pager"><span class="dim small" id="anz"></span><span><button id="zur">‹ zurück</button> <span class="small" id="seite"></span> <button id="vor">weiter ›</button></span></div>
@@ -190,9 +191,30 @@ function filtern(){
   if(!isNaN(mn)&&Math.max(r[7]||0,r[10]||0)<mn)continue;
   if(ni&&!inSuche(r))continue;
   if(teile.length&&!teile.every(t=>NAME[i].includes(t)))continue;
+  if(NR&&String(parseInt(r[3]))!==NR)continue;
   liste.push(i);}
- sortieren();seite=0;zeigen();
+ sortieren();seite=0;zeigen();hashSchreiben();
 }
+// Direktlinks: #q=Glurak&set=base1&nr=4&std=1 (set = TCGdex-Set-ID oder Kürzel)
+let NR='';
+function hashLesen(){
+ const p=new URLSearchParams(location.hash.slice(1));
+ if(!location.hash)return;  // ohne Direktlink Filter unverändert lassen
+ document.getElementById('q').value=p.get('q')||'';
+ const s=(p.get('set')||'').toLowerCase();
+ const i=s?S.findIndex(x=>x[0].toLowerCase()==s||(x[2]||'').toLowerCase()==s):-1;sel.value=i>=0?i:'';
+ NR=p.get('nr')?String(parseInt(p.get('nr'))):'';
+ document.getElementById('nrTag').hidden=!NR;document.getElementById('nrWert').textContent=NR;
+ document.getElementById('std').checked=p.get('std')=='1';
+}
+function hashSchreiben(){
+ const p=new URLSearchParams();const q=document.getElementById('q').value.trim();
+ if(q)p.set('q',q);if(sel.value!=='')p.set('set',S[+sel.value][0]);if(NR)p.set('nr',NR);
+ if(document.getElementById('std').checked)p.set('std','1');
+ const h=p.toString();history.replaceState(null,'',h?'#'+h:location.pathname+location.search);
+}
+document.getElementById('nrWeg').onclick=()=>{NR='';document.getElementById('nrTag').hidden=true;filtern();};
+window.addEventListener('hashchange',()=>{hashLesen();filtern();});
 function wert(r,k){if(k==2)return r[2];if(k==3){const n=parseInt(r[3]);return isNaN(n)?1e9:n;}
  if(k==7)return r[7]??(sortDir=='desc'?-1:1e9);if([8,9,10].includes(k))return r[k]??(sortDir=='desc'?-1:1e9);return r[k]||'';}
 function sortieren(){const f=sortDir=='asc'?1:-1;
@@ -220,7 +242,7 @@ document.getElementById('zur').onclick=()=>{seite--;zeigen();scrollTo(0,0);};
 document.getElementById('vor').onclick=()=>{seite++;zeigen();scrollTo(0,0);};
 document.querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{const k=+th.dataset.k;
  if(sortK==k)sortDir=sortDir=='asc'?'desc':'asc';else{sortK=k;sortDir=[7,8,9,10].includes(k)?'desc':'asc';}sortieren();seite=0;zeigen();});
-filtern();
+hashLesen();filtern();
 </script>
 </body>
 </html>

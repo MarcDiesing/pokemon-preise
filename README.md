@@ -9,7 +9,9 @@ Claude-Skill „Pokemon-Auktion“.
   [`daten-aktuell`](../../releases/tag/daten-aktuell), täglich gegen 06:17 Uhr ersetzt.
 - **Fester Download-Link:**
   `https://github.com/MarcDiesing/pokemon-preise/releases/download/daten-aktuell/pokemon_de.sqlite`
-- **Webseite (durchsuchbar):** https://marcdiesing.github.io/pokemon-preise/
+- **Webseite (durchsuchbar):** https://marcdiesing.github.io/pokemon-preise/  
+  Direktlinks: `#q=<Name>&set=<Set-ID oder Kürzel>&nr=<Nr.>&std=1`, z. B.
+  `https://marcdiesing.github.io/pokemon-preise/#q=Glurak&set=base1&nr=4`
 
 ## Ablauf
 
