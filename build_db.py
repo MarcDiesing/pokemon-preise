@@ -150,7 +150,9 @@ def baue_zeilen(karte, set_de, set_en, en_namen, pg):
         g = gruppen.setdefault(int(vid), [])
         if name not in g:
             g.append(name)
-    varianten = [("/".join(n), vid) for vid, n in gruppen.items()]
+    # Standarddrucke zuerst; teilt sich ein Standarddruck die ID mit einem Sonderdruck,
+    # ist der Preis der des Standardprodukts (sondervariante = 0)
+    varianten = [("/".join(sorted(n, key=lambda x: x.endswith("]"))), vid) for vid, n in gruppen.items()]
     haupt = (karte.get("thirdParty") or {}).get("cardmarket")
     if not varianten:
         varianten = [(None, int(haupt) if haupt else None)]
@@ -173,7 +175,8 @@ def baue_zeilen(karte, set_de, set_en, en_namen, pg):
             quelle, stand = None, None
         zeilen.append(dict(basis, cm_variante=variante, cm_id=cid, trend=trend, avg30=avg30,
                            low=low, trend_reverse=trend_rev,
-                           sondervariante=1 if variante and variante.endswith("]") else 0,
+                           sondervariante=1 if variante and all(
+                               t.endswith("]") for t in variante.split("/")) else 0,
                            cm_url=cm_url(basis["name_en"], basis["name_de"]),
                            preis_quelle=quelle, preis_stand=stand))
     return zeilen

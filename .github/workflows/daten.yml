@@ -6,7 +6,9 @@ on:
   workflow_dispatch:        # manuell über "Run workflow" startbar
 
 permissions:
-  contents: write           # nötig, um das Release-Asset zu ersetzen
+  contents: write           # Release-Asset ersetzen
+  pages: write              # Webseite veröffentlichen
+  id-token: write
 
 concurrency:
   group: daten
@@ -38,3 +40,20 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload daten-aktuell dist/pokemon_de.sqlite dist/pokemon_de.csv --clobber
+
+      - name: Webseite bauen
+        run: python3 build_html.py dist/pokemon_de.sqlite site/index.html --suche suche.json
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  seite:
+    needs: bauen
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
