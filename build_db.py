@@ -95,7 +95,8 @@ def cm_url(name_en, name_de):
     return "https://www.cardmarket.com/de/Pokemon/Products/Search?searchString=" + urllib.parse.quote(q)
 
 
-STANDARD_FELDER = {"type", "subtype", "thirdParty", "size"}
+# Felder ohne Bedeutung für die Druckvariante (Metadaten der TCGdex-API)
+STANDARD_FELDER = {"type", "subtype", "thirdParty", "size", "variantId", "id", "pricing", "languages"}
 
 
 def variante_name(v):
